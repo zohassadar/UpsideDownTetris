@@ -14,6 +14,11 @@ tetriminoX      := $0040                        ; Player data is $20 in size. It
 tetriminoY      := $0041
 currentPiece    := $0042                        ; Current piece as an orientation ID
 levelNumber     := $0044
+
+; Using (what I think is) unused memory for debugging
+myfield1        := $005d
+myfield2        := $005e
+myfield3        := $005f
 fallTimer       := $0045
 autorepeatX     := $0046
 startLevel      := $0047
@@ -524,7 +529,7 @@ gameMode_legalScreen:
         ldx     #$02
         ldy     #$02
         jsr     memset_page
-        lda     #$FF
+        lda     #$00                        ; No waiting to start
         jsr     sleep_for_a_vblanks
         lda     #$FF
         sta     generalCounter
@@ -1132,11 +1137,12 @@ gameModeState_initGameState:
         lda     #$05
         sta     player1_tetriminoX
         sta     player2_tetriminoX
-        lda     #$00
+        lda     #$13                            ;Start at row 19
         sta     player1_tetriminoY
-        sta     player2_tetriminoY
+        lda     #$03                   ; lineIndex starting value
+        sta     lineIndex
+        lda     #$00                   ; Set A back to 0
         sta     player1_vramRow
-        sta     player2_vramRow
         sta     player1_fallTimer
         sta     player2_fallTimer
         sta     pendingGarbage
@@ -1144,13 +1150,13 @@ gameModeState_initGameState:
         sta     player1_score
         sta     player1_score+1
         sta     player1_score+2
-        sta     player2_score
-        sta     player2_score+1
-        sta     player2_score+2
+        ; sta     player2_score      ; Trim p2 code to save space
+        ; sta     player2_score+1
+        ; sta     player2_score+2
         sta     player1_lines
         sta     player1_lines+1
-        sta     player2_lines
-        sta     player2_lines+1
+        ; sta     player2_lines
+        ; sta     player2_lines+1
         sta     twoPlayerPieceDelayCounter
         sta     lineClearStatsByType
         sta     lineClearStatsByType+1
@@ -1168,10 +1174,10 @@ gameModeState_initGameState:
         sta     renderMode
         lda     #$A0
         sta     player1_autorepeatY
-        sta     player2_autorepeatY
+        ; sta     player2_autorepeatY          ; Trim p2 code to save space
         jsr     chooseNextTetrimino
         sta     player1_currentPiece
-        sta     player2_currentPiece
+        ; sta     player2_currentPiece         ; Trim p2 code to save space
         jsr     incrementPieceStat
         ldx     #$17
         ldy     #$02
@@ -1271,14 +1277,14 @@ initPlayfieldIfTypeB:
         bne     initPlayfieldForTypeB
         jmp     L8875
 
-initPlayfieldForTypeB:
+initPlayfieldForTypeB:   ; To revisit.  Currently broken
         lda     #$0C
         sta     generalCounter
 L87E7:  lda     generalCounter
         beq     L884A
-        lda     #$14
-        sec
-        sbc     generalCounter
+        lda     #$00
+        clc
+        adc     generalCounter
         sta     generalCounter2
         lda     #$00
         sta     player1_vramRow
@@ -1324,26 +1330,31 @@ L8824:  ldx     #$17
         dec     generalCounter
         bne     L87E7
 L884A:  ldx     #$C8
-L884C:  lda     playfield,x
-        sta     playfieldForSecondPlayer,x
-        dex
-        bne     L884C
+; L884C:  lda     playfield,x
+;         sta     playfieldForSecondPlayer,x
+;         dex
+;         bne     L884C
         ldx     player1_startHeight
-        lda     typeBBlankInitCountByHeightTable,x
+        sec
+        lda     #$C8
+        sbc     typeBBlankInitCountByHeightTable,x
         tay
         lda     #$EF
 L885D:  sta     playfield,y
-        dey
-        cpy     #$FF
+        iny
+        cpy     #$C8
         bne     L885D
-        ldx     player2_startHeight
-        lda     typeBBlankInitCountByHeightTable,x
+        clc
+        lda     #$FF
         tay
-        lda     #$EF
-L886D:  sta     playfieldForSecondPlayer,y
-        dey
-        cpy     #$FF
-        bne     L886D
+        ; ldx     player2_startHeight
+        ; lda     typeBBlankInitCountByHeightTable,x
+        ; tay
+        ; lda     #$EF
+; L886D:  sta     playfieldForSecondPlayer,y
+        ; dey
+        ; cpy     #$FF
+        ; bne     L886D
 L8875:  rts
 
 typeBBlankInitCountByHeightTable:
@@ -1461,7 +1472,7 @@ drop_tetrimino:
         sta     fallTimer
         lda     tetriminoY
         sta     originalY
-        inc     tetriminoY
+        dec     tetriminoY    ; dec to go up!!
         jsr     isPositionValid
         beq     @ret
         lda     originalY
@@ -1639,33 +1650,33 @@ stageSpriteForCurrentPiece:
         rts
 
 orientationTable:
+        .byte   $01,$7B,$00,$00,$7B,$FF,$00,$7B
+        .byte   $00,$00,$7B,$01,$01,$7B,$00,$00
+        .byte   $7B,$FF,$00,$7B,$00,$FF,$7B,$00
         .byte   $00,$7B,$FF,$00,$7B,$00,$00,$7B
-        .byte   $01,$FF,$7B,$00,$FF,$7B,$00,$00
-        .byte   $7B,$00,$00,$7B,$01,$01,$7B,$00
-        .byte   $00,$7B,$FF,$00,$7B,$00,$00,$7B
-        .byte   $01,$01,$7B,$00,$FF,$7B,$00,$00
-        .byte   $7B,$FF,$00,$7B,$00,$01,$7B,$00
-        .byte   $FF,$7D,$00,$00,$7D,$00,$01,$7D
-        .byte   $FF,$01,$7D,$00,$FF,$7D,$FF,$00
+        .byte   $01,$FF,$7B,$00,$01,$7B,$00,$00
+        .byte   $7B,$00,$00,$7B,$01,$FF,$7B,$00
+        .byte   $01,$7D,$00,$FF,$7D,$01,$00,$7D
+        .byte   $00,$FF,$7D,$00,$01,$7D,$01,$00
         .byte   $7D,$FF,$00,$7D,$00,$00,$7D,$01
-        .byte   $FF,$7D,$00,$FF,$7D,$01,$00,$7D
-        .byte   $00,$01,$7D,$00,$00,$7D,$FF,$00
-        .byte   $7D,$00,$00,$7D,$01,$01,$7D,$01
-        .byte   $00,$7C,$FF,$00,$7C,$00,$01,$7C
-        .byte   $00,$01,$7C,$01,$FF,$7C,$01,$00
-        .byte   $7C,$00,$00,$7C,$01,$01,$7C,$00
-        .byte   $00,$7B,$FF,$00,$7B,$00,$01,$7B
-        .byte   $FF,$01,$7B,$00,$00,$7D,$00,$00
-        .byte   $7D,$01,$01,$7D,$FF,$01,$7D,$00
-        .byte   $FF,$7D,$00,$00,$7D,$00,$00,$7D
-        .byte   $01,$01,$7D,$01,$FF,$7C,$00,$00
-        .byte   $7C,$00,$01,$7C,$00,$01,$7C,$01
-        .byte   $00,$7C,$FF,$00,$7C,$00,$00,$7C
-        .byte   $01,$01,$7C,$FF,$FF,$7C,$FF,$FF
-        .byte   $7C,$00,$00,$7C,$00,$01,$7C,$00
-        .byte   $FF,$7C,$01,$00,$7C,$FF,$00,$7C
-        .byte   $00,$00,$7C,$01,$FE,$7B,$00,$FF
-        .byte   $7B,$00,$00,$7B,$00,$01,$7B,$00
+        .byte   $01,$7D,$00,$00,$7D,$00,$01,$7D
+        .byte   $FF,$FF,$7D,$00,$00,$7D,$01,$00
+        .byte   $7D,$FF,$00,$7D,$00,$FF,$7D,$FF
+        .byte   $00,$7C,$01,$FF,$7C,$00,$00,$7C
+        .byte   $00,$FF,$7C,$FF,$00,$7C,$00,$FF
+        .byte   $7C,$00,$FF,$7C,$01,$FE,$7C,$01
+        .byte   $00,$7B,$00,$FF,$7B,$00,$00,$7B
+        .byte   $FF,$FF,$7B,$FF,$00,$7D,$00,$FF
+        .byte   $7D,$01,$00,$7D,$FF,$FF,$7D,$00
+        .byte   $00,$7D,$01,$FF,$7D,$00,$FF,$7D
+        .byte   $01,$FE,$7D,$00,$01,$7C,$00,$FF
+        .byte   $7C,$00,$00,$7C,$00,$FF,$7C,$FF
+        .byte   $00,$7C,$01,$00,$7C,$FF,$00,$7C
+        .byte   $00,$FF,$7C,$01,$01,$7C,$01,$00
+        .byte   $7C,$00,$01,$7C,$00,$FF,$7C,$00
+        .byte   $01,$7C,$FF,$00,$7C,$FF,$00,$7C
+        .byte   $00,$00,$7C,$01,$01,$7B,$00,$FF
+        .byte   $7B,$00,$00,$7B,$00,$FE,$7B,$00
         .byte   $00,$7B,$FE,$00,$7B,$FF,$00,$7B
         .byte   $00,$00,$7B,$01,$00,$FF,$00,$00
         .byte   $FF,$00,$00,$FF,$00,$00,$FF,$00
@@ -1893,8 +1904,8 @@ sprite05PausePalette4:
         .byte   $00,$1E,$00,$10,$00,$1C,$00,$18
         .byte   $00,$0E,$00,$20,$FF
 sprite06TPiece:
-        .byte   $00,$7B,$02,$FC,$00,$7B,$02,$04
-        .byte   $00,$7B,$02,$0C,$08,$7B,$02,$04
+        .byte   $08,$7B,$02,$FC,$00,$7B,$02,$04
+        .byte   $08,$7B,$02,$0C,$08,$7B,$02,$04
         .byte   $FF
 sprite07SPiece:
         .byte   $00,$7D,$02,$04,$00,$7D,$02,$0C
@@ -1905,12 +1916,12 @@ sprite08ZPiece:
         .byte   $08,$7C,$02,$04,$08,$7C,$02,$0C
         .byte   $FF
 sprite09JPiece:
-        .byte   $00,$7D,$02,$FC,$00,$7D,$02,$04
-        .byte   $00,$7D,$02,$0C,$08,$7D,$02,$0C
+        .byte   $00,$7D,$02,$FC,$08,$7D,$02,$FC
+        .byte   $08,$7D,$02,$04,$08,$7D,$02,$0C
         .byte   $FF
 sprite0ALPiece:
-        .byte   $00,$7C,$02,$FC,$00,$7C,$02,$04
-        .byte   $00,$7C,$02,$0C,$08,$7C,$02,$FC
+        .byte   $08,$7C,$02,$FC,$08,$7C,$02,$04
+        .byte   $00,$7C,$02,$0C,$08,$7C,$02,$0C
         .byte   $FF
 sprite0BOPiece:
         .byte   $00,$7B,$02,$00,$00,$7B,$02,$08
@@ -2291,14 +2302,18 @@ isPositionValid:
         ldy     #$00
         lda     #$04
         sta     generalCounter3
-; Checks one square within the tetrimino
+; Up to row 0 is now valid
 @checkSquare:
-        lda     orientationTable,x
+        txa
+        sta     myfield1
+        lda     tetriminoY
         clc
-        adc     tetriminoY
-        adc     #$02
-        cmp     #$16
-        bcs     @invalid
+        adc     orientationTable,x
+        sta     myfield2
+        adc     #$01
+        ; sta     myfield3
+        cmp     #$01
+        bcc     @invalid
         lda     orientationTable,x
         asl     a
         sta     generalCounter4
@@ -2645,6 +2660,10 @@ updateLineClearingAnimation:
         ldx     generalCounter3
         lda     completedRow,x
         beq     @nextRow
+        cmp     #$FF           ; wedged in to show animation for top line
+        bne     @notRowZero
+        lda     #$00
+@notRowZero:
         asl     a
         tay
         lda     vramPlayfieldRows,y
@@ -2802,6 +2821,7 @@ playState_spawnNextTetrimino:
         lda     #$00
         sta     twoPlayerPieceDelayCounter
         sta     fallTimer
+        lda     #$13                            ;12 to go to bottom
         sta     tetriminoY
         lda     #$01
         sta     playState
@@ -2811,8 +2831,8 @@ playState_spawnNextTetrimino:
         lda     spawnOrientationFromOrientation,x
         sta     currentPiece
         jsr     incrementPieceStat
-        lda     numberOfPlayers
-        cmp     #$01
+        lda     #$00       ; 0 is always 0.  (go to onePlayerPieceSelection)
+        ; cmp     #$01  ; remove 2 bytes
         beq     @onePlayerPieceSelection
         lda     twoPlayerPieceDelayPiece
         sta     nextPiece
@@ -2928,7 +2948,7 @@ playState_lockTetrimino:
         sta     soundEffectSlot0Init
         lda     #$0A
         sta     playState
-        lda     #$F0
+        lda     #$13
         sta     curtainRow
         jsr     updateAudio2
         rts
@@ -2982,7 +3002,7 @@ playState_lockTetrimino:
         inx
         dec     generalCounter3
         bne     @lockSquare
-        lda     #$00
+        lda     #$03
         sta     lineIndex
         jsr     updatePlayfield
         jsr     updateMusicSpeed
@@ -2991,7 +3011,7 @@ playState_lockTetrimino:
 
 playState_updateGameOverCurtain:
         lda     curtainRow
-        cmp     #$14
+        cmp     #$FF
         beq     @curtainFinished
         lda     frameCounter
         and     #$03
@@ -3015,9 +3035,9 @@ playState_updateGameOverCurtain:
         lda     curtainRow
         sta     vramRow
 @incrementCurtainRow:
-        inc     curtainRow
+        dec     curtainRow
         lda     curtainRow
-        cmp     #$14
+        cmp     #$00
         bne     @ret
 @ret:   rts
 
@@ -3081,22 +3101,28 @@ playState_checkForCompletedRows:
         ldx     lineIndex
         lda     generalCounter2
         sta     completedRow,x
+        cmp     #$00
+        bne     @carryOnagain
+        lda     #$FF
+        sta     completedRow,x
+@carryOnagain:
         ldy     generalCounter
-        dey
-@movePlayfieldDownOneRow:
-        lda     (playfieldAddr),y
+        nop  ; instead of dey
+@movePlayfieldDownOneRow:  ;of note!
+        ; pull 10 ahead
         ldx     #$0A
         stx     playfieldAddr
+        lda     (playfieldAddr),y
+        ldx     #$00
+        stx     playfieldAddr
         sta     (playfieldAddr),y
-        lda     #$00
-        sta     playfieldAddr
-        dey
-        cpy     #$FF
+        iny      ; going up will bring up the stuff below the line
+        cpy     #$C9  ; 10 past end of playfield
         bne     @movePlayfieldDownOneRow
         lda     #$EF
         ldy     #$00
-@clearRowTopRow:
-        sta     (playfieldAddr),y
+@clearRowTopRow:  ; bottom row now
+        ; sta     (playfieldAddr),y
         iny
         cpy     #$0A
         bne     @clearRowTopRow
@@ -3109,10 +3135,10 @@ playState_checkForCompletedRows:
         lda     #$00
         sta     completedRow,x
 @incrementLineIndex:
-        inc     lineIndex
+        dec     lineIndex
         lda     lineIndex
-        cmp     #$04
-        bmi     @ret
+        cmp     #$FF
+        bne     @ret
         ldy     completedLines
         lda     garbageLines,y
         clc
@@ -3135,19 +3161,29 @@ playState_checkForCompletedRows:
         sta     soundEffectSlot1Init
 @ret:   rts
 
+
+
+; 15 bytes needs to go away
 playState_receiveGarbage:
-        lda     numberOfPlayers
-        cmp     #$01
-        beq     @ret
-        ldy     pendingGarbage
-        beq     @ret
-        lda     vramRow
-        cmp     #$20
-        bmi     @delay
-        lda     multBy10Table,y
-        sta     generalCounter2
-        lda     #$00
-        sta     generalCounter
+        lda     #$00       ; instead of numberOfPlayers.  Wash
+        ; cmp     #$01     ; - 2 bytes
+        beq     @ret       ; always true
+        ; ldy     pendingGarbage - 2 bytes
+        ; beq     @ret          - 2bytes
+        ; lda     vramRow
+        ; cmp     #$20
+        ; bmi     @delay
+        ; lda     multBy10Table,y
+        ; sta     generalCounter2
+        ; lda     #$00
+        ; sta     generalCounter
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
+        nop
 @shiftPlayfieldUp:
         ldy     generalCounter2
         lda     (playfieldAddr),y

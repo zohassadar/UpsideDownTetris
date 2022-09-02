@@ -6,6 +6,7 @@ import sys
 from PIL import Image  # Pillow
 import neslib
 
+
 def decode_color_code(color):
     """Decode a 6-digit hexadecimal color code. Return (R, G, B)."""
 
@@ -15,30 +16,34 @@ def decode_color_code(color):
         color = int(color, 16)
     except ValueError:
         sys.exit("Invalid hexadecimal color code.")
-    return (color >> 16, (color >> 8) & 0xff, color & 0xff)
+    return (color >> 16, (color >> 8) & 0xFF, color & 0xFF)
+
 
 def parse_arguments():
     """Parse and validate command line arguments using argparse."""
 
     parser = argparse.ArgumentParser(
         description="Convert an image file into an NES CHR (graphics) data file.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument(
-        "-p", "--palette", nargs=4, default=("000000", "555555", "aaaaaa", "ffffff"),
+        "-p",
+        "--palette",
+        nargs=4,
+        default=("000000", "555555", "aaaaaa", "ffffff"),
         help="PNG palette (which colors correspond to CHR colors 0-3). Four 6-digit hexadecimal "
-        "RRGGBB color codes (\"000000\"-\"ffffff\") separated by spaces. Must be all distinct."
+        'RRGGBB color codes ("000000"-"ffffff") separated by spaces. Must be all distinct.',
     )
     parser.add_argument(
         "input_file",
         help="The image file to read (e.g. PNG). The width must be 128 pixels. The height must be "
         "a multiple of 8 pixels. There must be four unique colors or less. --palette must contain "
-        "all the colors in the image, but the image need not contain all the colors in --palette."
+        "all the colors in the image, but the image need not contain all the colors in --palette.",
     )
     parser.add_argument(
         "output_file",
-        help="The NES CHR data file to write. The size will be a multiple of 256 bytes."
+        help="The NES CHR data file to write. The size will be a multiple of 256 bytes.",
     )
 
     args = parser.parse_args()
@@ -51,6 +56,7 @@ def parse_arguments():
         sys.exit("All colors in --palette must be distinct.")
 
     return args
+
 
 def validate_number_of_colors(img):
     """Make sure the image has four unique colors or less."""
@@ -69,25 +75,33 @@ def validate_number_of_colors(img):
                 if len(colors) > 4:
                     sys.exit("Too many unique colors.")
 
+
 def reorder_palette(img, paletteArg):
     """Reorder the image palette. paletteArg: colors from command line arguments."""
 
     oldPalette = img.getpalette()
-    oldPalette = [tuple(oldPalette[i*3:i*3+3]) for i in range(256)]  # [(R, G, B), ...]
+    oldPalette = [
+        tuple(oldPalette[i * 3 : i * 3 + 3]) for i in range(256)
+    ]  # [(R, G, B), ...]
 
     paletteArg = [decode_color_code(c) for c in paletteArg]  # [(R, G, B), ...]
 
     # make sure all image colors are defined
     histogram = img.histogram()
-    undefinedColors = set(oldPalette[i] for i in range(256) if histogram[i]) - set(paletteArg)
+    undefinedColors = set(oldPalette[i] for i in range(256) if histogram[i]) - set(
+        paletteArg
+    )
     if undefinedColors:
         sys.exit(
-            "The following color(s) in the image are not defined by --palette: " +
-            ", ".join("{:02x}{:02x}{:02x}".format(*RGB) for RGB in sorted(undefinedColors))
+            "The following color(s) in the image are not defined by --palette: "
+            + ", ".join(
+                "{:02x}{:02x}{:02x}".format(*RGB) for RGB in sorted(undefinedColors)
+            )
         )
 
     # map new indexes 0-3 to colors in the command line argument
     return img.remap_palette(oldPalette.index(c) for c in paletteArg)
+
 
 def prepare_image(img, palette):
     """Validate and prepare an image for converting it into NES CHR data.
@@ -99,6 +113,8 @@ def prepare_image(img, palette):
     if img.height == 0 or img.height % 8:
         sys.exit("Invalid image height.")
     if img.mode not in ("P", "L", "RGB"):
+        global heh
+        heh = img.mode
         sys.exit('The mode of the image must be "P", "L" or "RGB".')
     validate_number_of_colors(img)
 
@@ -109,6 +125,7 @@ def prepare_image(img, palette):
     # reorder image palette
     return reorder_palette(img, palette)
 
+heh = None
 def encode_image(img):
     """in: Pillow Image (width 128, height 8n, 2-bit palette)
     yield: one NES CHR data row (16*1 characters, 256 bytes) for every 128*8 pixels"""
@@ -120,9 +137,12 @@ def encode_image(img):
             charSlice = tuple(img.getpixel((charX * 8 + x, y)) for x in range(8))
             targetPos = charX * 16 + y % 8
             # LSBs, MSBs
-            (charData[targetPos], charData[targetPos+8]) = neslib.encode_tile_slice(charSlice)
+            (charData[targetPos], charData[targetPos + 8]) = neslib.encode_tile_slice(
+                charSlice
+            )
         if y % 8 == 7:
             yield charData
+
 
 def main():
     """The main function."""
@@ -133,6 +153,10 @@ def main():
             # open and prepare image
             source.seek(0)
             img = Image.open(source)
+            
+            # Workaround because game_tileset.png was saved by mspaint in mode RGBA instead of RGB
+            if img.mode == 'RGBA':
+                img = img.convert('RGB')
             img = prepare_image(img, args.palette)
             # encode image
             with open(args.output_file, "wb") as target:
@@ -141,6 +165,7 @@ def main():
                     target.write(chrDataRow)
     except OSError:
         sys.exit("Error reading/writing files.")
+
 
 if __name__ == "__main__":
     main()
