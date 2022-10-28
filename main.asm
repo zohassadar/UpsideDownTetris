@@ -3474,7 +3474,7 @@ gameModeState_handleGameOver:
         rts
 
 updateMusicSpeed:
-        ldx     #$05
+        ldx     #$0E
         lda     multBy10Table,x
         tay
         ldx     #$0A
