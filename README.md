@@ -2,7 +2,6 @@ The same game, but upside down.
 
 This is me learning how to computer a little bit better by seeing if I could make tetris play up instead of down.
 
-
 This is what has been done so far:
 
 Pieces spawn at the bottom
@@ -18,12 +17,9 @@ The same with the statistics table
 
 If I decide to continue on, this is what still needs to be done:
 
-Up needs to be mapped to down (and down to up)
 B game random logic (currently messed up)
-Music allegro logic
 New demo needs to be recorded
 Something in the intro screen needs to be turned upside down
-
 
 Many many many thanks to CelestialAmber for the disassembly and meatfighter for the blogpost.
 
@@ -39,7 +35,6 @@ It builds the following rom:
 
 To set up the repository, see [**INSTALL.md**](INSTALL.md).
 
+Thanks to <https://github.com/ejona86> for creating an info file and other files used to generate the disassembly code and other parts of the disassembly. (Original repository link:  <https://github.com/ejona86/taus>)
 
-Thanks to https://github.com/ejona86 for creating an info file and other files used to generate the disassembly code and other parts of the disassembly. (Original repository link:  https://github.com/ejona86/taus)
-
-CHR png converting tools repository link: https://github.com/qalle2/nes-util
+CHR png converting tools repository link: <https://github.com/qalle2/nes-util>

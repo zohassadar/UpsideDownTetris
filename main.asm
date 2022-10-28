@@ -973,7 +973,7 @@ gameMode_levelMenu_handleLevelHeightNavigation:
         bne     @stageLevelSelectCursor
         clc
         lda     spriteYOffset
-        adc     #$50
+        adc     #$50         ;857a
         sta     spriteYOffset
 @stageLevelSelectCursor:
         jsr     loadSpriteIntoOamStaging
@@ -1091,7 +1091,7 @@ gameModeState_initGameBackground:
         jmp     @nextPpuData
 
 @endOfPpuPatching:
-        lda     #$23
+        lda     #$23   ;867f
         sta     PPUADDR
         lda     #$3B
         sta     PPUADDR
@@ -1191,7 +1191,7 @@ gameModeState_initGameState:
         sta     player1_lines
         sta     player2_lines
 @skipTypeBInit:
-        lda     #$47
+        lda     #$47   ;8755
         sta     outOfDateRenderFlags
         jsr     updateAudioWaitForNmiAndResetOamStaging
         jsr     initPlayfieldIfTypeB
@@ -1224,7 +1224,7 @@ makePlayer1Active:
 makePlayer2Active:
         lda     #$02
         sta     activePlayer
-        lda     #$05
+        lda     #$05   ;878a
         sta     playfieldAddr+1
         lda     newlyPressedButtons_player2
         sta     newlyPressedButtons
@@ -1295,7 +1295,7 @@ L87FC:  ldx     #$17
         ldy     #$02
         jsr     generateNextPseudorandomNumber
         lda     rng_seed
-        and     #$07
+        and     #$07   ;87f9
         tay
         lda     rngTable,y
         sta     generalCounter4
@@ -1324,7 +1324,7 @@ L8824:  ldx     #$17
         clc
         adc     generalCounter5
         tay
-        lda     #$EF
+        lda     #$EF    ;8832
         sta     playfield,y
         jsr     updateAudioWaitForNmiAndResetOamStaging
         dec     generalCounter
@@ -1380,7 +1380,7 @@ gameModeState_updateCountersAndNonPlayerState:
         beq     @ret
         lda     displayNextPiece
         eor     #$01
-        sta     displayNextPiece
+        sta     displayNextPiece ;8888
 @ret:   inc     gameModeState
         rts
 
@@ -1413,7 +1413,7 @@ rotate_tetrimino:
         sta     currentPiece
         jsr     isPositionValid
         bne     @restoreOrientationID
-        lda     #$05
+        lda     #$05   ;88c3
         sta     soundEffectSlot1Init
         jmp     @ret
 
@@ -1444,7 +1444,7 @@ drop_tetrimino:
         bne     @lookupDropSpeed
         lda     newlyPressedButtons
         and     #$0F
-        cmp     #$04
+        cmp     #$08
         bne     @lookupDropSpeed
         lda     #$01
         sta     autorepeatY
@@ -1453,7 +1453,7 @@ drop_tetrimino:
 @autorepeating:
         lda     heldButtons
         and     #$0F
-        cmp     #$04
+        cmp     #$08   ;891f
         beq     @downPressed
         lda     #$00
         sta     autorepeatY
@@ -2282,7 +2282,7 @@ sprite55Penguin2:
         .byte   $00,$DD,$21,$00,$00,$DE,$21,$08
         .byte   $FF
 isPositionValid:
-        lda     tetriminoY
+        lda     tetriminoY   ; 946d
         asl     a
         sta     generalCounter
         asl     a
