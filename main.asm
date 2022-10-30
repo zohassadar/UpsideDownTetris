@@ -3579,7 +3579,7 @@ pollControllerButtons:
         lda     demo_heldButtons
         sta     (demoButtonsAddr,x)
         jsr     demoButtonsTable_indexIncr
-        lda     demo_repeats
+        lda     demo_repeats   ; A5CF81D120 or 9DCD in original RECORDING ANCHOR
         sta     (demoButtonsAddr,x)
         jsr     demoButtonsTable_indexIncr
         lda     demoButtonsAddr+1
