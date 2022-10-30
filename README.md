@@ -17,7 +17,6 @@ The same with the statistics table
 
 If I decide to continue on, this is what still needs to be done:
 
-B game random logic (currently messed up)
 New demo needs to be recorded
 Something in the intro screen needs to be turned upside down
 
