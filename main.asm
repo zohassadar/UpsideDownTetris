@@ -1275,30 +1275,38 @@ savePlayer2State:
 initPlayfieldIfTypeB:
         lda     gameType
         bne     initPlayfieldForTypeB
-        jmp     L8875
+        jmp     initPlayfieldNotGameB
 
-initPlayfieldForTypeB:   ; To revisit.  Currently broken
+initPlayfieldForTypeB:
         lda     #$0C
         sta     generalCounter
-L87E7:  lda     generalCounter
-        beq     L884A
-        lda     #$00
-        clc
-        adc     generalCounter
-        sta     generalCounter2
-        lda     #$00
+
+; generalCounter countdown.  12 to 0
+initPlayfieldGarbageInRow:  
+        lda     generalCounter
+        beq     initPlayfieldBlankBegin  ; go to blank when gc1 goes to 0 
+        lda     #$0C
+        sec
+        sbc     generalCounter
+        sta     generalCounter2  ;20 - 12, 20 - 11, 20 - 10...  goes into gc2..  8, 9, 10, 11
+
+
+initPlayfieldSetupSomething:
+        lda     #$10
         sta     player1_vramRow
         sta     player2_vramRow
         lda     #$09
-        sta     generalCounter3
-L87FC:  ldx     #$17
-        ldy     #$02
+        sta     generalCounter3    ; 9, 8, 7, 6...
+        
+initPlayfieldGarbageInColumn:  
+        ldx     #rng_seed   ; zero page address of rng_seed
+        ldy     #$02   ; size of seed
         jsr     generateNextPseudorandomNumber
         lda     rng_seed
-        and     #$07   ;87f9
+        and     #$07  ;3 bits are significant
         tay
         lda     rngTable,y
-        sta     generalCounter4
+        sta     generalCounter4    ; random piece
         ldx     generalCounter2
         lda     multBy10Table,x
         clc
@@ -1306,59 +1314,88 @@ L87FC:  ldx     #$17
         tay
         lda     generalCounter4
         sta     playfield,y
-        lda     generalCounter3
-        beq     L8824
-        dec     generalCounter3
-        jmp     L87FC
 
-L8824:  ldx     #$17
-        ldy     #$02
+        lda     generalCounter3
+        beq     initPlayfieldPokeHoleInRow
+        dec     generalCounter3
+        jmp     initPlayfieldGarbageInColumn
+
+initPlayfieldPokeHoleInRow:  
+        ldx     #rng_seed     ; zero page address of rng_seed
+        ldy     #$02     ; 2
         jsr     generateNextPseudorandomNumber
         lda     rng_seed
         and     #$0F
         cmp     #$0A
-        bpl     L8824
+        bpl     initPlayfieldPokeHoleInRow  ; loop again if we're above 10
+
         sta     generalCounter5
         ldx     generalCounter2
         lda     multBy10Table,x
         clc
         adc     generalCounter5
         tay
-        lda     #$EF    ;8832
+        lda     #$EF
         sta     playfield,y
         jsr     updateAudioWaitForNmiAndResetOamStaging
         dec     generalCounter
-        bne     L87E7
-L884A:  ldx     #$C8
-; L884C:  lda     playfield,x
-;         sta     playfieldForSecondPlayer,x
-;         dex
-;         bne     L884C
+
+        bne     initPlayfieldGarbageInRow
+
+initPlayfieldBlankBegin:  
+        ldx     #$C8
+
+initPlayfieldPlayer2Copy:  
+        lda     playfield,x
+        sta     playfieldForSecondPlayer,x
+        dex
+        bne     initPlayfieldPlayer2Copy
+
         ldx     player1_startHeight
-        sec
-        lda     #$C8
-        sbc     typeBBlankInitCountByHeightTable,x
+        lda     typeBBlankInitCountByHeightTable,x
         tay
         lda     #$EF
-L885D:  sta     playfield,y
+
+initPlayfieldBlankPlayer1:  
+        sta     playfield,y
+        iny 
+        cpy     #$C8
+        bne     initPlayfieldBlankPlayer1
+
+
+
+        ldx     player2_startHeight
+        lda     typeBBlankInitCountByHeightTable,x
+        tay
+        lda     #$EF
+initPlayfieldBlankPlayer2:  
+        sta     playfieldForSecondPlayer,y
         iny
         cpy     #$C8
-        bne     L885D
-        clc
-        lda     #$FF
-        tay
-        ; ldx     player2_startHeight
-        ; lda     typeBBlankInitCountByHeightTable,x
-        ; tay
-        ; lda     #$EF
-; L886D:  sta     playfieldForSecondPlayer,y
-        ; dey
-        ; cpy     #$FF
-        ; bne     L886D
-L8875:  rts
+        bne     initPlayfieldBlankPlayer2
+initPlayfieldResetvramRow:
+        lda     #$00
+        sta     player1_vramRow
+        sta     player2_vramRow
+initPlayfieldNotGameB:  
+        rts
+
+
+
+; x = 2
+; a = 150
+; y = 150
+; a = #$EF
+; playfield,y = #$EF
+
 
 typeBBlankInitCountByHeightTable:
-        .byte   $C8,$AA,$96,$78,$64,$50
+        ; .byte   $C8,$AA,$96,$78,$64,$50
+        ;       200,180,150,120,100, 80
+
+        ; inverted
+        .byte   $00,$13,$31,$4F,$63,$77
+
 rngTable:
         .byte   $EF,$7B,$EF,$7C,$7D,$7D,$EF
         .byte   $EF
