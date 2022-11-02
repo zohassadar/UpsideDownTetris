@@ -2,7 +2,7 @@ WINDOWS := $(shell which wine ; echo $$?)
 UNAME_S := $(shell uname -s)
 
 tetris_obj := main.o tetris-ram.o tetris.o
-cc65Path := tools/cc65
+cc65Path := 
 
 # Hack for OSX
 ifeq ($(UNAME_S),Darwin)
