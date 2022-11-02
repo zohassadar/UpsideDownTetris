@@ -17,8 +17,7 @@ The same with the statistics table
 
 If I decide to continue on, this is what still needs to be done:
 
-New demo needs to be recorded
-Something in the intro screen needs to be turned upside down
+Figure out how to hide the piece at the bottom of the screen when rotating
 
 Many many many thanks to CelestialAmber for the disassembly and meatfighter for the blogpost.
 

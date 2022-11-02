@@ -24,7 +24,7 @@ attr_table = """
 3233333333333323
 2222222222222222
 2222222222222222
-2111111111111122
+2111111111111112
 0200000000000022
 2200000000000022
 2200000000333322
@@ -101,21 +101,24 @@ def raw_print(ntbytes):
 
 array = np.array(ntbytes)
 array.shape = (32,32)
-subset = array[6:14,3:29]
-array[6:14,3:29] = np.flip(subset)
+subset = array[6:14,3:27]
 
-subset = array[6:14,3:29]
-new_subset = subset.copy()
+array[6:14,4:28] = np.flip(subset)
+
+array[6:14,3] = 0xFF
+
+
+# subsubset = array[6:14,3:27]
+# new_subset = subset.copy()
 
 # new_subset[0:8, 24:28] = np.flip(subset[0:8, 0:2])
 # new_subset[0:8,0:24] = subset[0:8, 2:26]
 
-array[6:14,3:29] = new_subset
+# array[6:14,3:27] = new_subset
 
-uniques = set(subset.reshape(208,).tolist())
-print(uniques)
+uniques = set(array[6:14,4:28].reshape(192,).tolist())
 
-
+array[6,27] = 0xB0
 
 tail =array[30:32, 0:32]
 tail.shape = 8,8
@@ -144,10 +147,8 @@ new_array = array.copy()
 for i in range(16):
     for j in range(16):
         idx = j | (i << 4)
-        print(idx)
         if idx not in uniques:
             continue
-        print('flippin')
         x = i * 8
         y = j * 8
         new_array[x:x+8, y: y+8] = np.flip(array[x:x+8, y: y+8])
