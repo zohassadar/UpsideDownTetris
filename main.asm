@@ -1652,12 +1652,14 @@ stageSpriteForCurrentPiece:
         sta     oamStaging,y ; stage block type of mino
         inc     oamStagingLength
         iny
+
+        ; m
         inx
         lda     #$02
         sta     oamStaging,y ; stage palette/front priority
         lda     originalY
-        cmp     #$2F ; compares with smallest allowed y position on the screen, not the field
-        bcs     @validYCoordinate
+        cmp     #$C8 ; compares with smallest allowed y position on the screen, not the field
+        bcc     @validYCoordinate
         inc     oamStagingLength
         dey
         lda     #$FF
