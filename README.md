@@ -1,5 +1,7 @@
 # Upside Down Tetris
 
+Forked from: [CelestialAmber/TetrisNESDisasm](https://github.com/CelestialAmber/TetrisNESDisasm)
+
 This is me learning how to computer a little bit better by seeing if I could make tetris play up instead of down.
 
 This is what has been done:
@@ -18,7 +20,7 @@ This is what has been done:
 - Pressing up speeds up the piece
 - B Game random data shows up at the top instead of the bottom
 
-Many many many thanks to CelestialAmber for the disassembly and meatfighter for the blogpost.
+Many many many thanks to CelestialAmber for the disassembly and meatfighter for the blogpost. 
 
 The original readme:
 
