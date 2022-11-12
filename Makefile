@@ -23,6 +23,7 @@ LD65 := $(WINE) $(cc65Path)/bin/ld65
 nesChrEncode := python3 tools/nes-util/nes_chr_encode.py
 
 tetris.nes: tetris.o main.o tetris-ram.o
+tetris.bps: tetris.nes
 
 tetris:= tetris.nes
 
@@ -41,11 +42,16 @@ compare: $(tetris)
 	$(SHA1SUM) -c tetris.sha1
 
 clean:
-	rm -f  $(tetris_obj) $(tetris) *.o *.lst *.map *.d tetris.dbg tetris.lbl gfx/*.chr
+	rm -f  $(tetris_obj) $(tetris) *.o *.lst *.map *.bps *.d tetris.dbg tetris.lbl gfx/*.chr
 	$(MAKE) clean -C tools/cTools/
 
 tools:
 	$(MAKE) -C tools/cTools/
+
+patch:
+	
+
+
 
 # Build tools when building the rom.
 # This has to happen before the rules are processed, since that's when scan_includes is run.
@@ -61,9 +67,12 @@ $(tetris_obj): %.o: %.asm $$(dep)
 %: %.cfg
 		$(LD65) $(LDFLAGS) -m $(basename $@).map -Ln $(basename $@).lbl --dbgfile $(basename $@).dbg -o $@ -C $< $(tetris_obj)
 
-
-
 %.chr: %.png
 		$(nesChrEncode) $< $@
 
 
+
+.DEFAULT_GOAL = tetris.bps
+
+tetris.bps: tetris.nes
+	tools/flips-linux --create clean.nes tetris.nes tetris.bps
