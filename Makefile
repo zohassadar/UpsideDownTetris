@@ -33,14 +33,15 @@ tetris:= tetris.nes
 .PHONY: clean compare tools
 
 
-CAFLAGS = -g
+CAFLAGS = -g \
+          -l $*.lst
 LDFLAGS =
 
 compare: $(tetris)
 	$(SHA1SUM) -c tetris.sha1
 
 clean:
-	rm -f  $(tetris_obj) $(tetris) *.d tetris.dbg tetris.lbl gfx/*.chr
+	rm -f  $(tetris_obj) $(tetris) *.o *.lst *.map *.d tetris.dbg tetris.lbl gfx/*.chr
 	$(MAKE) clean -C tools/cTools/
 
 tools:
@@ -58,7 +59,7 @@ $(tetris_obj): %.o: %.asm $$(dep)
 		$(CA65) $(CAFLAGS) $*.asm -o $@
 
 %: %.cfg
-		$(LD65) $(LDFLAGS) -Ln $(basename $@).lbl --dbgfile $(basename $@).dbg -o $@ -C $< $(tetris_obj)
+		$(LD65) $(LDFLAGS) -m $(basename $@).map -Ln $(basename $@).lbl --dbgfile $(basename $@).dbg -o $@ -C $< $(tetris_obj)
 
 
 
