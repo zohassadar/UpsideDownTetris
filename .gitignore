@@ -5,7 +5,7 @@
 *.ipynb
 *.map
 *.lst
-tetris.lst
-tetris.lbl
-tetris.dbg
+*.lbl
+*.dbg
+*.bps
 tools/cTools/scan_includes
