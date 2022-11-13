@@ -18,20 +18,20 @@ NEW_TITLE = "/home/rwd/TetrisNESDisasm/gfx/title_menu_tileset.png"
 attr_table = """
 2222222222222222
 2222222222222222
-3233333333333323
 2222222222222222
-2222222222222222
+2333333333333332
 2111111111111122
-0200000000000022
+2222222222222222
 2200000000000022
-2200000000333322
+2000000000000022
 2000000000333322
 2200000000333322
 2200000000333322
-2222222222222222
+2200000000333322
 2220311100000022
-0000000000000000
 2222222222222222
+2222222222222222
+0000000000000000
 """
 
 
@@ -43,11 +43,11 @@ for row in range(0, len(attr_values), 32):
     line1 = data[:16]
     line2 = data[16:]
     for i in range(0,16,2):
-        tl = int(line1[i]) << 6
-        tr = int(line1[i+1]) << 4
-        br = int(line2[i+1]) << 2
-        bl = int(line2[i])
-        byte = tl | tr | br | bl
+        br = int(line1[i]) << 6
+        bl = int(line1[i+1]) << 4
+        tr = int(line2[i+1]) << 2
+        tl = int(line2[i])
+        byte = br | bl | tr | tl
         attrs.append(byte)
 
 
@@ -76,17 +76,13 @@ for row in footer:
     line2 = ""
     for byte in row:
         #0xNN......
-        tl = (byte & 0b11_00_00_00) >> 6
-
+        br = (byte & 0b11_00_00_00) >> 6
         #0x..NN....
-        tr = (byte & 0b00_11_00_00) >> 4
-
+        bl = (byte & 0b00_11_00_00) >> 4
         #0x....NN..
-        br = (byte & 0b00_00_11_00) >> 2
-
+        tr = (byte & 0b00_00_11_00) >> 2
         #0x......NN
-        bl = byte & 0b00_00_00_11
-
+        tl = byte & 0b00_00_00_11
         line1 += f'{tl}{tr}'
         line2 += f'{bl}{br}'
     print(line1)
