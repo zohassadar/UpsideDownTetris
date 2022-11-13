@@ -8,8 +8,8 @@ np.set_printoptions(formatter={'int': hex})
 OLD_NAMETABLE = "nametables/title_screen_nametable.bak.bin"
 NEW_NAMETABLE = "nametables/title_screen_nametable.bin"
 
-OLD_TITLE = '/home/rwd/TetrisNESDisasm/gfx/title_menu_tileset.bak.png'
-NEW_TITLE = "/home/rwd/TetrisNESDisasm/gfx/title_menu_tileset.png"
+OLD_TITLE = '/home/rwd/UpsideDownTetris/gfx/title_menu_tileset.bak.png'
+NEW_TITLE = "/home/rwd/UpsideDownTetris/gfx/title_menu_tileset.png"
 
 
 
@@ -43,10 +43,10 @@ for row in range(0, len(attr_values), 32):
     line1 = data[:16]
     line2 = data[16:]
     for i in range(0,16,2):
-        br = int(line1[i]) << 6
-        bl = int(line1[i+1]) << 4
-        tr = int(line2[i+1]) << 2
-        tl = int(line2[i])
+        tl = int(line1[i])
+        tr = int(line1[i+1]) << 2
+        bl = int(line2[i]) << 4
+        br = int(line2[i+1]) << 6
         byte = br | bl | tr | tl
         attrs.append(byte)
 
